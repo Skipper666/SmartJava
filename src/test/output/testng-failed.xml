@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Simple HTML-XML Suite]">
+  <test name="Simple HTML-XML test">
+    <classes>
+      <class name="steam.test.SteamTest"/>
+    </classes>
+  </test> <!-- Simple HTML-XML test -->
+  <test name="Simple HTML-XML test(failed)">
+    <classes>
+      <class name="steam.test.SteamTest">
+        <methods>
+          <include name="tearDown"/>
+          <include name="setUp"/>
+          <include name="testSteam"/>
+        </methods>
+      </class> <!-- steam.test.SteamTest -->
+    </classes>
+  </test> <!-- Simple HTML-XML test(failed) -->
+</suite> <!-- Failed suite [Simple HTML-XML Suite] -->

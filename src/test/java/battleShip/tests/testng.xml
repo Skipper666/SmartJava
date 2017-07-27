@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="BattleShipSuite" parallel="false">
+
+    <test name="BattleShip">
+        <classes>
+            <class name="battleShip.tests.BattleShipTest"/>
+        </classes>
+    </test>
+
+</suite>
