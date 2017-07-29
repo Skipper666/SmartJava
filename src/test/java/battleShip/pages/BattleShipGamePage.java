@@ -16,7 +16,6 @@ public class BattleShipGamePage extends BasePage {
 
     private int[][] cats = new int[10][10];
 
-
     public BattleShipGamePage() {
         super(pageLocator);
     }
@@ -57,4 +56,6 @@ public class BattleShipGamePage extends BasePage {
     private void mainAlgorithm() {
 
     }
+    
+
 }
