@@ -1,6 +1,7 @@
 package battleShip.tests;
 
 import battleShip.pages.BattleShipGamePage;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import smartframework.base.BaseTest;
 
@@ -10,10 +11,12 @@ public class BattleShipTest extends BaseTest {
     public void BattleShip() {
 
         BattleShipGamePage battleShipGamePage = new BattleShipGamePage();
-        battleShipGamePage.chooseRandomEnemy();
-        battleShipGamePage.arrangeShips();
-        battleShipGamePage.clickStartButton();
+
+        //battleShipGamePage.chooseRandomEnemy();
+        //battleShipGamePage.arrangeShips();
+        //battleShipGamePage.clickStartButton();
         battleShipGamePage.waitEnemy();
-        battleShipGamePage.play();
+        boolean test = battleShipGamePage.play();
+        //Assert.assertTrue(battleShipGamePage.play(),"You lose");
     }
 }
