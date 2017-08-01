@@ -105,21 +105,31 @@ public class BattleShipGamePage extends BasePage {
     private void doShot(int line, int column) {
         Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
         doShotLink.click();
-        if (checkNotificationForNextStep()) {
-            if (checkAreaAroundShot(line,column)) {
-                doShot(line + 1, column);
-                doShot(line - 1, column);
-                doShot(line, column - 1);
-                doShot(line, column + 1);
-            }
-        } else {
+        if (checkNotificationForNextStep())
+            checkAreaAroundShot(line, column);
+        else
             firingOrder[line][column] = -1;
-        }
+
     }
 
-    private boolean checkAreaAroundShot(int line, int column){
-    return false;
-    //TODO [DA] need do it
+    private boolean checkAreaAroundShot(int line, int column) {
+        Label missCell = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line + 1, column)));
+        if (missCell.waitForElementsPresent().isEmpty())
+            doShot(line + 1, column);
+
+        Label missCell2 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line - 1, column)));
+        if (missCell2.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+
+        Label missCell3 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line, column + 1)));
+        if (missCell2.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+
+        Label missCell4 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line, column - 1)));
+        if (missCell2.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+        return false;
+        //TODO [DA] need do it
     }
 
 
