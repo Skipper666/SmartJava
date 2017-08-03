@@ -1,6 +1,5 @@
 package battleShip.pages;
 
-import battleShip.enums.Notifications;
 import org.openqa.selenium.By;
 import smartframework.base.BasePage;
 import smartframework.elements.Label;
@@ -19,6 +18,9 @@ public class BattleShipGamePage extends BasePage {
     private static final String DO_SHOT_LINK_TEMPLATE = "//div[contains(@class,'rival')]//div[@class='battlefield-gap']//table//tr[%d]//td[%d]";
 
     private int[][] firingOrder;
+    private int accurateShotPositionColumn = 0;
+    private int accurateShotPositionLine = 0;
+
 
     public BattleShipGamePage() {
 
@@ -63,12 +65,77 @@ public class BattleShipGamePage extends BasePage {
                 isWin = false;
                 break;
             }
+            while (true) {
+                if (checkNotificationForNextStep())
+                    break;
+            }
             shot();
         }
         return isWin;
     }
 
-    private boolean isWin(){
+    private void shot() {
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (firingOrder[i][j] == 1) {
+                    if (i == 0) i++;
+                    if (j == 0) j++;
+                    doShot(i, j);
+                    firingOrder[i][j] = -1;
+                    return;
+                }
+
+            }
+        }
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (firingOrder[i][j] == 2) {
+                    doShot(i, j);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void doShot(int line, int column) {
+        Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
+        doShotLink.click();
+        if (checkNotificationForNextStep()) {
+            if (accurateShotPositionColumn != 0 && accurateShotPositionLine != 0) {
+                accurateShotPositionLine = line;
+                accurateShotPositionColumn = column;
+                checkAreaAroundShot(line, column);
+            }
+        }
+    }
+
+    private void checkAreaAroundShot(int line, int column) {
+        Label missCell = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
+        if (!missCell.waitForElementsPresent().isEmpty())
+            doShot(line + 1, column);
+
+        Label missCell2 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
+        if (!missCell2.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+
+        Label missCell3 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
+        if (!missCell3.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+
+        Label missCell4 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
+        if (!missCell4.waitForElementsPresent().isEmpty())
+            doShot(line - 1, column);
+        accurateShotPositionLine = 0;
+        accurateShotPositionColumn = 0;
+    }
+
+
+    private boolean checkNotificationForNextStep() {
+        String notificationText = actualNotification.getText();
+        return notificationText.equals(MOVE_ON.notification());
+    }
+
+    private boolean isWin() {
         String notificationText = actualNotification.getText();
         return notificationText.equals(GAME__OVER_WIN.notification());
     }
@@ -80,64 +147,6 @@ public class BattleShipGamePage extends BasePage {
                 notificationText.equals(GAME_ERROR.notification()) ||
                 notificationText.equals(SERVER_ERROR.notification());
     }
-
-    private void shot() {
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                if (firingOrder[i][j] == 1) {
-                    if(i==0) i++;
-                    if(j==0) j++;
-                    doShot(i, j);
-                    break;
-                }
-            }
-        }
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                if (firingOrder[i][j] == 2) {
-                    doShot(i,j);
-                    break;
-                }
-            }
-        }
-    }
-
-    private void doShot(int line, int column) {
-        Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
-        doShotLink.click();
-        if (checkNotificationForNextStep())
-            checkAreaAroundShot(line, column);
-        else
-            firingOrder[line][column] = -1;
-
-    }
-
-    private boolean checkAreaAroundShot(int line, int column) {
-        Label missCell = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
-        if (missCell.waitForElementsPresent().isEmpty())
-            doShot(line + 1, column);
-
-        Label missCell2 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
-        if (missCell2.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
-
-        Label missCell3 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
-        if (missCell2.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
-
-        Label missCell4 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
-        if (missCell2.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
-        return false;
-        //TODO [DA] need do it
-    }
-
-
-    private boolean checkNotificationForNextStep() {
-        String notificationText = actualNotification.getText();
-        return notificationText.equals(MOVE_ON.notification());
-    }
-
 
     private int[][] prepareFiringOrder() {
         int[][] firingOrder = new int[10][10];
@@ -160,6 +169,4 @@ public class BattleShipGamePage extends BasePage {
         }
         return firingOrder;
     }
-    
-
 }
