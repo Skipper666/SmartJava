@@ -113,19 +113,19 @@ public class BattleShipGamePage extends BasePage {
     }
 
     private boolean checkAreaAroundShot(int line, int column) {
-        Label missCell = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line + 1, column)));
+        Label missCell = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
         if (missCell.waitForElementsPresent().isEmpty())
             doShot(line + 1, column);
 
-        Label missCell2 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line - 1, column)));
+        Label missCell2 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
         if (missCell2.waitForElementsPresent().isEmpty())
             doShot(line - 1, column);
 
-        Label missCell3 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line, column + 1)));
+        Label missCell3 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
         if (missCell2.waitForElementsPresent().isEmpty())
             doShot(line - 1, column);
 
-        Label missCell4 = new Label(By.xpath(String.format(MISS_CELL_LINK_TEMPLATE, line, column - 1)));
+        Label missCell4 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
         if (missCell2.waitForElementsPresent().isEmpty())
             doShot(line - 1, column);
         return false;
@@ -135,7 +135,7 @@ public class BattleShipGamePage extends BasePage {
 
     private boolean checkNotificationForNextStep() {
         String notificationText = actualNotification.getText();
-        return notificationText.equals(MOVE_ON);
+        return notificationText.equals(MOVE_ON.notification());
     }
 
 
