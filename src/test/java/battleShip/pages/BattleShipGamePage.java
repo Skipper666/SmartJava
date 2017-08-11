@@ -21,6 +21,10 @@ public class BattleShipGamePage extends BasePage {
     private int accurateShotPositionColumn = 0;
     private int accurateShotPositionLine = 0;
 
+    private int accurateCurrentShotPositionColumn = 0;
+    private int accurateTopShotPositionLine = 0;
+    private int accurateBottomShotPositionLine = 0;
+
 
     public BattleShipGamePage() {
 
@@ -69,7 +73,6 @@ public class BattleShipGamePage extends BasePage {
                 if (checkNotificationForNextStep())
                     break;
             }
-            shot();
         }
         return isWin;
     }
@@ -77,11 +80,11 @@ public class BattleShipGamePage extends BasePage {
     private void shot() {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                if (firingOrder[i][j] == 1) {
-                    if (i == 0) i++;
-                    if (j == 0) j++;
-                    doShot(i, j);
-                    firingOrder[i][j] = -1;
+                if (firingOrder[j][i] == 1) {
+                    int line = j + 1;
+                    int column = i + 1;
+                    doShot(line, column);
+                    firingOrder[j][i] = -1;
                     return;
                 }
 
@@ -89,7 +92,7 @@ public class BattleShipGamePage extends BasePage {
         }
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                if (firingOrder[i][j] == 2) {
+                if (firingOrder[j][i] == 2) {
                     doShot(i, j);
                     return;
                 }
@@ -97,38 +100,92 @@ public class BattleShipGamePage extends BasePage {
         }
     }
 
-    private void doShot(int line, int column) {
+
+
+    private boolean doShot(int line, int column) {
         Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
         doShotLink.click();
         if (checkNotificationForNextStep()) {
-            if (accurateShotPositionColumn != 0 && accurateShotPositionLine != 0) {
+            if (accurateShotPositionColumn == 0 && accurateShotPositionLine == 0) {
                 accurateShotPositionLine = line;
                 accurateShotPositionColumn = column;
-                checkAreaAroundShot(line, column);
             }
+            firingOrder[column - 1][line - 1] = -1;
+            checkAreaAroundShot(accurateShotPositionLine, accurateShotPositionColumn);
+            return true;
+        }
+        return false;
+    }
+
+    private void doShotAroundBaseShot(int line, int column) {
+        Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
+        doShotLink.click();
+        if (checkNotificationForNextStep()) {
+            firingOrder[column - 1][line - 1] = -1;
+
+            accurateCurrentShotPositionColumn = column;
+            accurateTopShotPositionLine = line + 1;
+            accurateBottomShotPositionLine = line - 1;
         }
     }
 
     private void checkAreaAroundShot(int line, int column) {
-        Label missCell = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
-        if (!missCell.waitForElementsPresent().isEmpty())
-            doShot(line + 1, column);
+        Label shotLeftBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
+        if (checkMissOrEmptyCell(shotLeftBaseShot))
+            doShotAroundBaseShot(line, column - 1);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
+        Label shotRightBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
+        if (checkMissOrEmptyCell(shotRightBaseShot))
+            doShotAroundBaseShot(line, column - 1);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
 
-        Label missCell2 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
-        if (!missCell2.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
+        Label shotAboveBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
+        if (checkMissOrEmptyCell(shotAboveBaseShot))
+            doShotAroundBaseShot(line, column - 1);
 
-        Label missCell3 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
-        if (!missCell3.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
+        Label shotUnderBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
+        if (checkMissOrEmptyCell(shotUnderBaseShot))
+            doShotAroundBaseShot(line, column - 1);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
 
-        Label missCell4 = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
-        if (!missCell4.waitForElementsPresent().isEmpty())
-            doShot(line - 1, column);
-        accurateShotPositionLine = 0;
-        accurateShotPositionColumn = 0;
+        if (accurateCurrentShotPositionColumn != 0 && accurateTopShotPositionLine != 0 && accurateBottomShotPositionLine != 0)
+            finishShip(line, column);
     }
 
+    private void finishShip(int line, int column) {
+        Label finishShipShotAbove = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
+        if (checkMissOrEmptyCell(finishShipShotAbove))
+            doShotAroundBaseShot(line, column - 1);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
+
+        Label finishShipShotUnder = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
+        if (checkMissOrEmptyCell(finishShipShotUnder))
+            doShotAroundBaseShot(line, column - 1);
+        while (true) {
+            if (checkNotificationForNextStep())
+                break;
+        }
+    }
+
+    private boolean checkMissOrEmptyCell(Label cell){
+        return cell.getAttribute("class").contains("empty");
+    }
 
     private boolean checkNotificationForNextStep() {
         String notificationText = actualNotification.getText();
