@@ -21,9 +21,9 @@ public class BattleShipGamePage extends BasePage {
     private int accurateShotPositionColumn = 0;
     private int accurateShotPositionLine = 0;
 
-    private int accurateCurrentShotPositionColumn = 0;
-    private int accurateTopShotPositionLine = 0;
-    private int accurateBottomShotPositionLine = 0;
+    private int accurateCurrentShotPositionColumn = -1;
+    private int accurateTopShotPositionLine = -1;
+    private int accurateBottomShotPositionLine = -1;
 
 
     public BattleShipGamePage() {
@@ -49,10 +49,11 @@ public class BattleShipGamePage extends BasePage {
     }
 
     public void waitEnemy() {
+        //TODO обратить внимание, если плохие случаи
         while (true) {
             String notificationText = actualNotification.getText();
             if (notificationText.equals(GAME_STARTED_MOVE_ON.notification()) ||
-                    notificationText.equals(GAME_STARTED_MOVE_OFF.notification()))
+                    notificationText.equals(MOVE_ON.notification()))
                 break;
         }
     }
@@ -93,25 +94,35 @@ public class BattleShipGamePage extends BasePage {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 if (firingOrder[j][i] == 2) {
-                    doShot(i, j);
+                    int line = j + 1;
+                    int column = i + 1;
+                    doShot(line, column);
+                    firingOrder[j][i] = -1;
                     return;
                 }
             }
         }
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (firingOrder[j][i] == 3) {
+                    int line = j + 1;
+                    int column = i + 1;
+                    doShot(line, column);
+                    firingOrder[j][i] = -1;
+                    return;
+                }
+            }
+        }
+        System.out.println("test");
     }
-
 
 
     private boolean doShot(int line, int column) {
         Label doShotLink = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column)));
         doShotLink.click();
         if (checkNotificationForNextStep()) {
-            if (accurateShotPositionColumn == 0 && accurateShotPositionLine == 0) {
-                accurateShotPositionLine = line;
-                accurateShotPositionColumn = column;
-            }
             firingOrder[column - 1][line - 1] = -1;
-            checkAreaAroundShot(accurateShotPositionLine, accurateShotPositionColumn);
+            checkAreaAroundShot(line, column);
             return true;
         }
         return false;
@@ -122,50 +133,56 @@ public class BattleShipGamePage extends BasePage {
         doShotLink.click();
         if (checkNotificationForNextStep()) {
             firingOrder[column - 1][line - 1] = -1;
-
-            accurateCurrentShotPositionColumn = column;
-            accurateTopShotPositionLine = line + 1;
-            accurateBottomShotPositionLine = line - 1;
+            checkAreaAroundShot(line, column);
         }
     }
 
     private void checkAreaAroundShot(int line, int column) {
-        Label shotLeftBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
-        if (checkMissOrEmptyCell(shotLeftBaseShot))
-            doShotAroundBaseShot(line, column - 1);
-        while (true) {
-            if (checkNotificationForNextStep())
-                break;
-        }
-        Label shotRightBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
-        if (checkMissOrEmptyCell(shotRightBaseShot))
-            doShotAroundBaseShot(line, column - 1);
-        while (true) {
-            if (checkNotificationForNextStep())
-                break;
+        if (column != 1) {
+            Label shotLeftBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
+            if (checkMissOrEmptyCell(shotLeftBaseShot))
+                doShotAroundBaseShot(line, column - 1);
+            while (true) {
+                if (checkNotificationForNextStep()) {
+                    break;
+                }
+            }
         }
 
-        Label shotAboveBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
-        if (checkMissOrEmptyCell(shotAboveBaseShot))
-            doShotAroundBaseShot(line, column - 1);
-
-        while (true) {
-            if (checkNotificationForNextStep())
-                break;
-        }
-        Label shotUnderBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
-        if (checkMissOrEmptyCell(shotUnderBaseShot))
-            doShotAroundBaseShot(line, column - 1);
-        while (true) {
-            if (checkNotificationForNextStep())
-                break;
+        if (column != 10) {
+            Label shotRightBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column + 1)));
+            if (checkMissOrEmptyCell(shotRightBaseShot))
+                doShotAroundBaseShot(line, column + 1);
+            while (true) {
+                if (checkNotificationForNextStep()) {
+                    break;
+                }
+            }
         }
 
-        if (accurateCurrentShotPositionColumn != 0 && accurateTopShotPositionLine != 0 && accurateBottomShotPositionLine != 0)
-            finishShip(line, column);
+        if (line != 10) {
+            Label shotAboveBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line + 1, column)));
+            if (checkMissOrEmptyCell(shotAboveBaseShot))
+                doShotAroundBaseShot(line + 1, column);
+            while (true) {
+                if (checkNotificationForNextStep()) {
+                    break;
+                }
+            }
+        }
+        if (line != 1) {
+            Label shotUnderBaseShot = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line - 1, column)));
+            if (checkMissOrEmptyCell(shotUnderBaseShot))
+                doShotAroundBaseShot(line - 1, column);
+            while (true) {
+                if (checkNotificationForNextStep()) {
+                    break;
+                }
+            }
+        }
     }
 
-    private void finishShip(int line, int column) {
+   /* private void finishShip(int line, int column) {
         Label finishShipShotAbove = new Label(By.xpath(String.format(DO_SHOT_LINK_TEMPLATE, line, column - 1)));
         if (checkMissOrEmptyCell(finishShipShotAbove))
             doShotAroundBaseShot(line, column - 1);
@@ -181,9 +198,9 @@ public class BattleShipGamePage extends BasePage {
             if (checkNotificationForNextStep())
                 break;
         }
-    }
+    }*/
 
-    private boolean checkMissOrEmptyCell(Label cell){
+    private boolean checkMissOrEmptyCell(Label cell) {
         return cell.getAttribute("class").contains("empty");
     }
 
@@ -224,6 +241,14 @@ public class BattleShipGamePage extends BasePage {
                 y--;
             }
         }
+
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (firingOrder[i][j] != 2 && firingOrder[i][j] != 1)
+                    firingOrder[i][j] = 3;
+            }
+        }
+
         return firingOrder;
     }
 }
